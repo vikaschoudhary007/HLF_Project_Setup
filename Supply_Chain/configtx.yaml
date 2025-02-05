@@ -1,0 +1,221 @@
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: ordererOrganizations/orderer.com/msp
+    Policies: &OrdererPolicies
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"  
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')" 
+      Endorsement:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+  - &Producer
+    Name: Producer
+    ID: ProducerMSP
+    MSPDir: peerOrganizations/producer.com/msp
+    Policies: &ProducerPolicies
+      Readers:
+        Type: Signature
+        Rule: "OR('ProducerMSP.admin','ProducerMSP.peer','ProducerMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('ProducerMSP.admin','ProducerMSP.client')"  
+      Admins:
+        Type: Signature
+        Rule: "OR('ProducerMSP.admin')" 
+      Endorsement:
+        Type: Signature
+        Rule: "OR('ProducerMSP.member')"
+  - &Manufacturer
+    Name: Manufacturer
+    ID: ManufacturerMSP
+    MSPDir: peerOrganizations/manufacturer.com/msp
+    Policies: &ManufacturerPolicies
+      Readers:
+        Type: Signature
+        Rule: "OR('ManufacturerMSP.admin','ManufacturerMSP.peer','ManufacturerMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('ManufacturerMSP.admin','ManufacturerMSP.client')"  
+      Admins:
+        Type: Signature
+        Rule: "OR('ManufacturerMSP.admin')" 
+      Endorsement:
+        Type: Signature
+        Rule: "OR('ManufacturerMSP.member')"
+  - &Deliverer  
+    Name: Deliverer
+    ID: DelivererMSP
+    MSPDir: peerOrganizations/deliverer.com/msp
+    Policies: &DelivererPolicies
+      Readers:
+        Type: Signature
+        Rule: "OR('DelivererMSP.admin','DelivererMSP.peer','DelivererMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('DelivererMSP.admin','DelivererMSP.client')"  
+      Admins:
+        Type: Signature
+        Rule: "OR('DelivererMSP.admin')" 
+      Endorsement:
+        Type: Signature
+        Rule: "OR('DelivererMSP.member')" 
+  - &Retailer
+    Name: Retailer
+    ID: RetailerMSP
+    MSPDir: peerOrganizations/retailer.com/msp
+    Policies: &RetailerPolicies
+      Readers:
+        Type: Signature
+        Rule: "OR('RetailerMSP.admin','RetailerMSP.peer','RetailerMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('RetailerMSP.admin','RetailerMSP.client')"  
+      Admins:
+        Type: Signature
+        Rule: "OR('RetailerMSP.admin')" 
+      Endorsement:
+        Type: Signature
+        Rule: "OR('RetailerMSP.member')"  
+
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V1_4_3: true
+    V1_3: false
+    V1_1: false
+  Orderer: &OrdererCapabilities
+    V1_4_2: true
+    V1_1: false
+  Application: &ApplicationCapabilities
+    V1_4_2: true
+    V1_3: false
+    V1_2: false
+    V1_1: false
+
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"  
+      
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  EtcdRaft:
+    Consenters:
+      - Host: orderer1.orderer.com
+        Port: 7050
+        ClientTLSCert: ordererOrganizations/orderer.com/orderer1/tls/signcerts/cert.pem
+        ServerTLSCert: ordererOrganizations/orderer.com/orderer1/tls/signcerts/cert.pem
+      - Host: orderer2.orderer.com
+        Port: 7050
+        ClientTLSCert: ordererOrganizations/orderer.com/orderer2/tls/signcerts/cert.pem
+        ServerTLSCert: ordererOrganizations/orderer.com/orderer2/tls/signcerts/cert.pem 
+      - Host: orderer3.orderer.com
+        Port: 7050
+        ClientTLSCert: ordererOrganizations/orderer.com/orderer3/tls/signcerts/cert.pem
+        ServerTLSCert: ordererOrganizations/orderer.com/orderer3/tls/signcerts/cert.pem
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Organizations:
+  Policies:  
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+
+Profiles:
+
+  SupplyOrdererGenesis:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      OrdererType: etcdraft
+      Addresses:
+        - orderer1.orderer.com:7050
+        - orderer2.orderer.com:7050
+        - orderer3.orderer.com:7050
+      Organizations:
+        - *OrdererOrg
+      Capabilities:
+        <<: *OrdererCapabilities
+    Consortiums:
+      SampleConsortium:
+        Organizations:
+          - *Producer
+          - *Manufacturer
+          - *Deliverer
+          - *Retailer
+
+  SupplyChannel:
+    Consortium: SampleConsortium
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *Producer
+        - *Manufacturer
+        - *Deliverer
+        - *Retailer
+      Capabilities:
+        <<: *ApplicationCapabilities 
+
+
+       
+                
+
+
+
+
+
+
+
+
+
+
